@@ -5,4 +5,4 @@ migrate_up:
 migrate_down:
 	knex migrate:down
 start:
-	node src/main.js
+	node src/index.js
