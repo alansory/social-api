@@ -18,6 +18,7 @@ publicRouter.get('/', (req, res) => {
 });
 
 publicRouter.post('/register', authController.register)
+publicRouter.post('/login', authController.login)
 
 export {
   publicRouter
