@@ -19,6 +19,8 @@ publicRouter.get('/', (req, res) => {
 
 publicRouter.post('/register', authController.register)
 publicRouter.post('/login', authController.login)
+publicRouter.post('/forgot-password', authController.forgotPassword)
+publicRouter.post('/reset-password/:token', authController.resetPassword)
 
 export {
   publicRouter
