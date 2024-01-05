@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { validate } from "../validation/validation.js";
-import { loginValidation, registerValidation } from "../validation/auth-validation.js";
+import { forgotValidation, loginValidation, registerValidation, resetPasswordValidation } from "../validation/auth-validation.js";
 import { prismaClient } from "../application/database.js";
 import { ResponseError } from "../error/response-error.js";
 
@@ -52,6 +52,48 @@ const login = async(request) =>{
   return result;
 }
 
+const forgotPassword = async(request) => {
+  const validateRequest = validate(forgotValidation, request)
+
+  const user = await prismaClient.user.findUnique({
+    where: {
+      email: validateRequest.email
+    }
+  });
+
+  if (!user) {
+    throw new ResponseError(401, "User not found");
+  }
+  const token = generateAccessToken(user)
+  const result = {
+    token: token,
+  }
+  return result;
+} 
+
+const resetPassword = async(request) => {
+  const { token } = request.params;
+  const validateRequest = validate(resetPasswordValidation, request.body)
+
+  const validPassword = validateRequest.password==validateRequest.confirm_password
+
+  if (!validPassword) {
+    throw new ResponseError(401, "Invalid password");
+  }
+  const { email } = jwt.verify(token, process.env.TOKEN_SECRET, { expiresIn: process.env.JWT_EXPIRE })
+  const newPassword = await bcrypt.hash(validateRequest.password,10)
+  const user = await prismaClient.user.update({
+    where: { email: email },
+    data: {
+      password: newPassword,
+    },
+  });
+  const result = {
+    data: user,
+  }
+  return result;
+} 
+
 function exclude(user, ...keys) {
   for (let key of keys) {
     delete user[key]
@@ -61,5 +103,7 @@ function exclude(user, ...keys) {
 
 export default {
   register,
-  login
+  login,
+  forgotPassword,
+  resetPassword,
 }
